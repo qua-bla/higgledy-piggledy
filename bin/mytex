@@ -1,0 +1,15 @@
+#!/bin/bash -e
+
+cmd=$1
+
+if [ "$cmd" == "clean" ]
+then
+	for match in `cat ~/.config/mytex/clean`
+	do
+		ls "$match" &> /dev/null && rm -v "$match"
+	done
+else
+	echo "usage: $0 [clean]"
+fi
+
+exit 0

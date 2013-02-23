@@ -1,0 +1,9 @@
+#!/bin/bash -e
+
+file="`ls -Sr ${1}*.tex | grep -v -- -gnuplottex- | grep -v pre- | tail -n1`"
+
+if [[ ! ${file} ]]; then
+	exit 1;
+fi
+
+xdg-open "${file}"
