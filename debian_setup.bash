@@ -24,9 +24,8 @@ echo 'others'
 aptitude install pidgin pidgin-otr
 aptitude install texlive-full texmaker
 aptitude install gnuplot-x11
-aptitude install git
+aptitude install git gitg
 aptitude install pgadmin3
 
 echo 'media'
 aptitude install vlc banshee
-
