@@ -22,10 +22,13 @@ aptitude install xul-ext-certificatepatrol xul-ext-https-everywhere xul-ext-nosc
 
 echo 'others'
 aptitude install pidgin pidgin-otr
-aptitude install texlive-full texmaker
+aptitude install texlive-full biber texmaker
 aptitude install gnuplot-x11
 aptitude install git gitg
 aptitude install pgadmin3
 
 echo 'media'
 aptitude install vlc banshee
+
+echo 'more browsers'
+aptitude install epiphany-browser chromium-browser dillo
