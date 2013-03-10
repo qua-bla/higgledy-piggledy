@@ -22,8 +22,8 @@ aptitude install xul-ext-certificatepatrol xul-ext-https-everywhere xul-ext-nosc
 
 echo 'others'
 aptitude install pidgin pidgin-otr
-aptitude install texlive-full biber texmaker
-aptitude install gnuplot-x11
+aptitude install texlive-full biber texmaker myspell-en-us
+aptitude install gnuplot-x11 okular
 aptitude install git gitg
 aptitude install pgadmin3
 
