@@ -14,7 +14,7 @@ aptitude install broadcom-sta-dkms
 modprobe -r b44 b43 b43legacy ssb brcmsmac
 modprobe wl
 
-echo 'VPN'
+echo 'VPN (cisco)'
 aptitude install network-manager-openconnect
 
 echo 'mozilla'
@@ -22,6 +22,8 @@ echo 'deb http://mozilla.debian.net/ experimental iceweasel-esr' >> /etc/apt/sou
 aptitude install -t experimental iceweasel iceweasel-l10n-de
 aptitude install icedove icedove-l10n-de
 aptitude install xul-ext-certificatepatrol xul-ext-https-everywhere xul-ext-noscript xul-ext-sieve 
+
+echo 'java plugin'
 aptitude install icedtea-plugin
 
 echo 'others'
@@ -29,6 +31,8 @@ aptitude install pidgin pidgin-otr
 aptitude install texlive-full biber texmaker myspell-en-us
 aptitude install gnuplot-x11 okular
 aptitude install git gitg
+
+echo 'PostgreSQL admin tool'
 aptitude install pgadmin3
 
 echo 'media'
