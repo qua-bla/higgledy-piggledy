@@ -22,6 +22,7 @@ echo 'deb http://mozilla.debian.net/ experimental iceweasel-esr' >> /etc/apt/sou
 aptitude install -t experimental iceweasel iceweasel-l10n-de
 aptitude install icedove icedove-l10n-de
 aptitude install xul-ext-certificatepatrol xul-ext-https-everywhere xul-ext-noscript xul-ext-sieve 
+aptitude install icedtea-plugin
 
 echo 'others'
 aptitude install pidgin pidgin-otr
