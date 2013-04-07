@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo 'basics'
-aptitude install vim htop etckeeper
+aptitude install vim htop etckeeper ntp
 
 echo 'nvidia'
 aptitude install linux-headers-amd64 
@@ -13,6 +13,9 @@ echo 'broadcom wlan'
 aptitude install broadcom-sta-dkms
 modprobe -r b44 b43 b43legacy ssb brcmsmac
 modprobe wl
+
+echo 'VPN'
+aptitude install network-manager-openconnect
 
 echo 'mozilla'
 echo 'deb http://mozilla.debian.net/ experimental iceweasel-esr' >> /etc/apt/sources.list
