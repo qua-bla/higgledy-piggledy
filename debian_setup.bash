@@ -35,6 +35,10 @@ aptitude install git gitg
 echo 'PostgreSQL admin tool'
 aptitude install pgadmin3
 
+echo 'tool to help if a command is unknown in terminal'
+aptitude install command-not-found
+update-command-not-found
+
 echo 'media'
 aptitude install vlc banshee
 
