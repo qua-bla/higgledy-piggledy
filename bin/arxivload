@@ -1,0 +1,34 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sys
+import urllib2
+import feedparser
+
+arxiv = sys.argv[1]
+
+import urllib
+url = 'http://export.arxiv.org/api/query?id_list=' + arxiv
+data = urllib2.urlopen(url).read()
+
+feedparser._FeedParserMixin.namespaces['http://a9.com/-/spec/opensearch/1.1/'] = 'opensearch'
+feedparser._FeedParserMixin.namespaces['http://arxiv.org/schemas/atom'] = 'arxiv'
+feed = feedparser.parse(data)
+
+for entry in feed.entries:
+    print 'arxiv-id: %s' % entry.id.split('/abs/')[-1]
+    print 'Published: %s' % entry.published
+    print 'Title:  %s' % entry.title
+    print 'Author: '+', '.join(author.name for author in entry.authors)
+    for link in entry.links:
+	try:
+            if link.title == 'pdf':
+                pdflink = link.href
+        except AttributeError:
+            pass
+    print pdflink
+    filename = pdflink.split('/')[-1] + '.pdf'
+    pdfdata = urllib2.urlopen(pdflink).read()
+    with open(filename, 'w') as f:
+        f.write(pdfdata)
+    print filename
