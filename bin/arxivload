@@ -34,12 +34,13 @@ for arxiv in args.arxivid:
     feed = feedparser.parse(data)
     
     for entry in feed.entries:
+	#print entry
         entry['eprint'] = entry.id.split('/abs/')[-1]
         entry['date'] = entry.published[0:10]
         entry['author'] = ' and '.join(author.name for author in entry.authors)
         entry['eprintclass'] = 'cs.DS'
         entry['eprinttype'] = 'arxiv'
-        entry['version'] = 1
+        entry['version'] = entry['eprint'].split('v')[-1]
 
         log.info('Found `%s` by `%s`', entry['title'], entry['author'])
 
@@ -52,13 +53,14 @@ for arxiv in args.arxivid:
 
         bibtex_content = ''
         for key in bibtex_keys:
-            bibtex_content += '  {0} = {{{1}}}\n'.format(key, entry[key])
+            bibtex_content += '  {0} = {{{1}}}\n'.format(key, entry[key].encode('utf-8'))
     
         bibtex_entry = bibtex_format.format(bibtex_content=bibtex_content, entry=entry)
-        for bib_filename in args.bibtex:
-            with open(bib_filename, 'a') as bib_file:
-                bib_file.write(bibtex_entry)
-                log.info('Bibtex entry written to `%s`', bib_filename)
+	if args.bibtex:
+            for bib_filename in args.bibtex:
+                with open(bib_filename, 'a') as bib_file:
+                    bib_file.write(bibtex_entry)
+                    log.info('Bibtex entry written to `%s`', bib_filename)
 
         log.debug('Download URL is `%s`', pdflink)
         filename = pdflink.split('/')[-1] + '.pdf'
