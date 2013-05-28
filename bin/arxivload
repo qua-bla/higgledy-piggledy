@@ -53,7 +53,7 @@ for arxiv in args.arxivid:
 
         bibtex_content = ''
         for key in bibtex_keys:
-            bibtex_content += '  {0} = {{{1}}}\n'.format(key, entry[key].encode('utf-8'))
+            bibtex_content += '  {0} = {{{1}}},\n'.format(key, entry[key].encode('utf-8'))
     
         bibtex_entry = bibtex_format.format(bibtex_content=bibtex_content, entry=entry)
 	if args.bibtex:
