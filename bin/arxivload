@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import os
 import sys
 import feedparser
 import fileinput
@@ -8,7 +9,7 @@ import urllib2 as urllib
 import argparse
 import logging as log
 
-bibtex_keys = [ 'author', 'title', 'version', 'date', 'eprinttype', 'eprintclass', 'eprint' ]
+bibtex_keys = [ 'author', 'title', 'version', 'date', 'eprinttype', 'eprintclass', 'eprint', 'localfile', 'url' ]
 bibtex_format = '\n@Online{{{entry.eprint},\n{bibtex_content}}}\n'
 
 parser = argparse.ArgumentParser()
@@ -34,7 +35,6 @@ for arxiv in args.arxivid:
     feed = feedparser.parse(data)
     
     for entry in feed.entries:
-	#print entry
         entry['eprint'] = entry.id.split('/abs/')[-1]
         entry['date'] = entry.published[0:10]
         entry['author'] = ' and '.join(author.name for author in entry.authors)
@@ -44,27 +44,32 @@ for arxiv in args.arxivid:
 
         log.info('Found `%s` by `%s`', entry['title'], entry['author'])
 
+        filename = entry['eprint'] + '.pdf'
+
         for link in entry.links:
             try:
                 if link.title == 'pdf':
                     pdflink = link.href
+                    entry['url'] = link.href
             except AttributeError:
                 pass
 
-        bibtex_content = ''
-        for key in bibtex_keys:
-            bibtex_content += '  {0} = {{{1}}},\n'.format(key, entry[key].encode('utf-8'))
     
-        bibtex_entry = bibtex_format.format(bibtex_content=bibtex_content, entry=entry)
 	if args.bibtex:
             for bib_filename in args.bibtex:
+                bibtex_content = ''
+		entry['localfile'] = os.path.relpath(filename, os.path.dirname(bib_filename))
+                for key in bibtex_keys:
+                    bibtex_content += '  {0} = {{{1}}},\n'.format(key, entry[key].encode('utf-8'))
+                bibtex_entry = bibtex_format.format(bibtex_content=bibtex_content, entry=entry)
+
                 with open(bib_filename, 'a') as bib_file:
                     bib_file.write(bibtex_entry)
                     log.info('Bibtex entry written to `%s`', bib_filename)
 
         log.debug('Download URL is `%s`', pdflink)
-        filename = pdflink.split('/')[-1] + '.pdf'
         pdfdata = urllib.urlopen(pdflink).read()
         with open(filename, 'w') as f:
             f.write(pdfdata)
         log.info('Download saved as `%s`', filename)
+
