@@ -9,7 +9,7 @@ import urllib2 as urllib
 import argparse
 import logging as log
 
-bibtex_keys = [ 'author', 'title', 'version', 'date', 'eprinttype', 'eprintclass', 'eprint', 'localfile', 'url' ]
+bibtex_keys = [ 'author', 'title', 'version', 'date', 'eprinttype', 'eprintclass', 'eprint', 'localfile', 'url' , 'abstract' ]
 bibtex_format = '\n@Online{{{entry.eprint},\n{bibtex_content}}}\n'
 
 parse_values = list(sys.argv)
@@ -47,6 +47,7 @@ for arxiv in args.arxivid:
         entry['eprinttype'] = 'arxiv'
         entry['version'] = entry['eprint'].split('v')[-1]
         entry['url'] = entry.id
+        entry['abstract'] = entry.summary
 
         log.info('Found `%s` by `%s`', entry['title'], entry['author'])
 
