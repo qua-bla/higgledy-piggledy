@@ -12,12 +12,17 @@ import logging as log
 bibtex_keys = [ 'author', 'title', 'version', 'date', 'eprinttype', 'eprintclass', 'eprint', 'localfile', 'url' ]
 bibtex_format = '\n@Online{{{entry.eprint},\n{bibtex_content}}}\n'
 
-parser = argparse.ArgumentParser()
-parser.description = 'Downloads arXiv articles as pdf'
+parse_values = list(sys.argv)
+parse_values.pop(0)
+if (len(sys.argv) > 0 and os.path.exists('.arxivload')):
+    parse_values.append('@.arxivload')
+
+parser = argparse.ArgumentParser(fromfile_prefix_chars='@')
+parser.description = 'Downloads arXiv articles as pdf. Use a .arxivload file to define default arguments.'
 parser.add_argument('arxivid', nargs='+')
 parser.add_argument('-v', '--verbose', action='count', help='gives some output')
-parser.add_argument('-b', '--bibtex', metavar='file.bib', nargs='+', help='adds entry to a given bibtex file')
-args = parser.parse_args()
+parser.add_argument('-b', '--bibtex', metavar='file.bib', nargs='+', help='adds entry to given bibtex files')
+args = parser.parse_args(parse_values)
 
 if args.verbose > 1:
     log.basicConfig(format="%(levelname)s: %(message)s", level=log.DEBUG)
@@ -41,6 +46,7 @@ for arxiv in args.arxivid:
         entry['eprintclass'] = 'cs.DS'
         entry['eprinttype'] = 'arxiv'
         entry['version'] = entry['eprint'].split('v')[-1]
+        entry['url'] = entry.id
 
         log.info('Found `%s` by `%s`', entry['title'], entry['author'])
 
@@ -50,15 +56,14 @@ for arxiv in args.arxivid:
             try:
                 if link.title == 'pdf':
                     pdflink = link.href
-                    entry['url'] = link.href
             except AttributeError:
                 pass
 
     
-	if args.bibtex:
+        if args.bibtex:
             for bib_filename in args.bibtex:
                 bibtex_content = ''
-		entry['localfile'] = os.path.relpath(filename, os.path.dirname(bib_filename))
+                entry['localfile'] = os.path.relpath(filename, os.path.dirname(bib_filename))
                 for key in bibtex_keys:
                     bibtex_content += '  {0} = {{{1}}},\n'.format(key, entry[key].encode('utf-8'))
                 bibtex_entry = bibtex_format.format(bibtex_content=bibtex_content, entry=entry)
