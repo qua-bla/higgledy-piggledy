@@ -51,7 +51,7 @@ for arxiv in args.arxivid:
 
         log.info('Found `%s` by `%s`', entry['title'], entry['author'])
 
-        filename = entry['eprint'] + '.pdf'
+        filename = entry['eprint'].replace('/', '_') + '.pdf'
 
         for link in entry.links:
             try:
