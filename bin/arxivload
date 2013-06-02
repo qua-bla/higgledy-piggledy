@@ -3,14 +3,36 @@
 
 import os
 import sys
-import feedparser
 import fileinput
 import urllib2 as urllib
 import argparse
 import logging as log
+import arxiv
 
 bibtex_keys = [ 'author', 'title', 'version', 'date', 'eprinttype', 'eprintclass', 'eprint', 'localfile', 'url' , 'abstract' ]
 bibtex_format = '\n@Online{{{entry.eprint},\n{bibtex_content}}}\n'
+
+def to_bibtex(entry):
+    bibtex_content = ''
+    for key in bibtex_keys:
+        bibtex_content += '  {0} = {{{1}}},\n'.format(key, entry[key].encode('utf-8'))
+    return bibtex_format.format(bibtex_content=bibtex_content, entry=entry)
+
+def write_bibtex(entry, bib_filename):
+    entry['localfile'] = os.path.relpath(entry['filename'], os.path.dirname(bib_filename))
+    with open(bib_filename, 'a') as bib_file:
+        bib_file.write(to_bibtex(entry))
+    log.info('Bibtex entry written to `%s`', bib_filename)
+
+def download(entry):
+    download_url= entry['downloadurl']
+    filename = entry['filename']
+    log.debug('Download URL is `%s`', download_url)
+    data = urllib.urlopen(download_url).read()
+    with open(filename, 'w') as f:
+        f.write(data)
+    log.info('Download saved as `%s`', filename)
+
 
 parse_values = list(sys.argv)
 parse_values.pop(0)
@@ -31,51 +53,12 @@ if args.verbose == 1:
 else:
     log.basicConfig(format="%(levelname)s: %(message)s")
 
-for arxiv in args.arxivid:
-    url = 'http://export.arxiv.org/api/query?id_list=' + arxiv
-    data = urllib.urlopen(url).read()
+for arxiv_id in args.arxivid:
+    entry = arxiv.get_by_id(arxiv_id)
+
+    download(entry)
     
-    feedparser._FeedParserMixin.namespaces['http://a9.com/-/spec/opensearch/1.1/'] = 'opensearch'
-    feedparser._FeedParserMixin.namespaces['http://arxiv.org/schemas/atom'] = 'arxiv'
-    feed = feedparser.parse(data)
-    
-    for entry in feed.entries:
-        entry['eprint'] = entry.id.split('/abs/')[-1]
-        entry['date'] = entry.published[0:10]
-        entry['author'] = ' and '.join(author.name for author in entry.authors)
-        entry['eprintclass'] = 'cs.DS'
-        entry['eprinttype'] = 'arxiv'
-        entry['version'] = entry['eprint'].split('v')[-1]
-        entry['url'] = entry.id
-        entry['abstract'] = entry.summary
-
-        log.info('Found `%s` by `%s`', entry['title'], entry['author'])
-
-        filename = entry['eprint'].replace('/', '_') + '.pdf'
-
-        for link in entry.links:
-            try:
-                if link.title == 'pdf':
-                    pdflink = link.href
-            except AttributeError:
-                pass
-
-    
-        if args.bibtex:
-            for bib_filename in args.bibtex:
-                bibtex_content = ''
-                entry['localfile'] = os.path.relpath(filename, os.path.dirname(bib_filename))
-                for key in bibtex_keys:
-                    bibtex_content += '  {0} = {{{1}}},\n'.format(key, entry[key].encode('utf-8'))
-                bibtex_entry = bibtex_format.format(bibtex_content=bibtex_content, entry=entry)
-
-                with open(bib_filename, 'a') as bib_file:
-                    bib_file.write(bibtex_entry)
-                    log.info('Bibtex entry written to `%s`', bib_filename)
-
-        log.debug('Download URL is `%s`', pdflink)
-        pdfdata = urllib.urlopen(pdflink).read()
-        with open(filename, 'w') as f:
-            f.write(pdfdata)
-        log.info('Download saved as `%s`', filename)
+    if args.bibtex:
+        for bib_filename in args.bibtex:
+            write_bibtex(entry, bib_filename)
 
