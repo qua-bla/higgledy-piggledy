@@ -8,6 +8,7 @@ import urllib2 as urllib
 import argparse
 import logging as log
 import arxiv
+from lxml import etree
 
 bibtex_keys = [ 'author', 'title', 'version', 'date', 'eprinttype', 'eprintclass', 'eprint', 'localfile', 'url' , 'abstract' ]
 bibtex_format = '\n@Online{{{entry.eprint},\n{bibtex_content}}}\n'
@@ -57,6 +58,10 @@ for arxiv_id in args.arxivid:
     entry = arxiv.get_by_id(arxiv_id)
 
     download(entry)
+
+    f = urllib.urlopen( "http://adsabs.harvard.edu/cgi-bin/bib_query?arXiv:" + arxiv_id ).read()
+    tree = etree.HTML( f )
+    print tree.xpath( "//meta[@name='citation_doi']" )[0].get("content")
     
     if args.bibtex:
         for bib_filename in args.bibtex:
