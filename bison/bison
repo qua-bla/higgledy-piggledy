@@ -3,37 +3,41 @@
 
 import os
 import sys
+import re
 import fileinput
 import urllib2 as urllib
 import argparse
 import logging as log
-import arxiv
 from lxml import etree
 
+import arxiv
+import crossref
+
 bibtex_keys = [ 'author', 'title', 'version', 'date', 'eprinttype', 'eprintclass', 'eprint', 'localfile', 'url' , 'abstract' ]
-bibtex_format = '\n@Online{{{entry.eprint},\n{bibtex_content}}}\n'
+bibtex_format = '\n@Online{{{ref[author]},\n{bibtex_content}}}\n'
 
-def to_bibtex(entry):
+def to_bibtex(ref):
     bibtex_content = ''
-    for key in bibtex_keys:
-        bibtex_content += '  {0} = {{{1}}},\n'.format(key, entry[key].encode('utf-8'))
-    return bibtex_format.format(bibtex_content=bibtex_content, entry=entry)
+    for key in ref:
+        if ref[key] != None:
+            bibtex_content += '  {0} = {{{1}}},\n'.format(key, ref[key].encode('utf-8'))
+    return bibtex_format.format(bibtex_content=bibtex_content, ref=ref)
 
-def write_bibtex(entry, bib_filename):
-    entry['localfile'] = os.path.relpath(entry['filename'], os.path.dirname(bib_filename))
+def write_bibtex(ref, bib_filename):
+    if 'localfile' in ref:
+        ref['localfile'] = os.path.relpath(ref['filename'], os.path.dirname(bib_filename))
     with open(bib_filename, 'a') as bib_file:
-        bib_file.write(to_bibtex(entry))
+        bib_file.write(to_bibtex(ref))
     log.info('Bibtex entry written to `%s`', bib_filename)
 
-def download(entry):
-    download_url= entry['downloadurl']
-    filename = entry['filename']
+def download(ref):
+    download_url= ref['downloadurl']
+    filename = ref['filename']
     log.debug('Download URL is `%s`', download_url)
     data = urllib.urlopen(download_url).read()
     with open(filename, 'w') as f:
         f.write(data)
     log.info('Download saved as `%s`', filename)
-
 
 parse_values = list(sys.argv)
 parse_values.pop(0)
@@ -54,16 +58,24 @@ if args.verbose == 1:
 else:
     log.basicConfig(format="%(levelname)s: %(message)s")
 
-for arxiv_id in args.arxivid:
-    entry = arxiv.get_by_id(arxiv_id)
+re_arxiv_new = re.compile('^[0-9]+\\.[0-9v]+$')
+re_arxiv_old = re.compile('.*-[a-z]+/[0-9v]+$')
+re_doi = re.compile('^10\\..*/.*$')
+for article_id in args.arxivid:
+    if re_arxiv_new.match(article_id) or re_arxiv_old.match(article_id):
+        ref = arxiv.get_by_id(article_id)
+        """ find paper <> arxiv relation """
+        f = urllib.urlopen( "http://adsabs.harvard.edu/cgi-bin/bib_query?arXiv:" + article_id ).read()
+        tree = etree.HTML( f )
+        print tree.xpath( "//meta[@name='citation_doi']" )[0].get("content")
+    elif re_doi.match(article_id):
+        ref = crossref.get_by_id(article_id, 'crossref@acc.colormove.de')
 
-    download(entry)
-
-    f = urllib.urlopen( "http://adsabs.harvard.edu/cgi-bin/bib_query?arXiv:" + arxiv_id ).read()
-    tree = etree.HTML( f )
-    print tree.xpath( "//meta[@name='citation_doi']" )[0].get("content")
-    
+    """ generate bibtex """
     if args.bibtex:
         for bib_filename in args.bibtex:
-            write_bibtex(entry, bib_filename)
+            write_bibtex(ref, bib_filename)
+
+    if 'downloadurl' in ref:
+        download(ref)
 

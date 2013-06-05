@@ -20,7 +20,7 @@ def tag(parent, tags = []):
 def get_by_id(doi, crossref_key):
     res = { 'doi' : doi }
  
-    f = urllib.urlopen('http://www.crossref.org/openurl/?id=doi:'+doi+'&noredirect=true&pid='+crossref_api_key+'&format=unixref')
+    f = urllib.urlopen('http://www.crossref.org/openurl/?id=doi:'+doi+'&noredirect=true&pid='+crossref_key+'&format=unixref')
     xml = minidom.parse(f)
  
     journal = tag(xml, ['doi_records','doi_record','crossref','journal'])
