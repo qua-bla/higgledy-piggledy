@@ -8,8 +8,10 @@ import fileinput
 import urllib2 as urllib
 import argparse
 import logging as log
+import requests
 from lxml import etree
 
+import adsabs
 import arxiv
 import crossref
 
@@ -58,6 +60,7 @@ if args.verbose == 1:
 else:
     log.basicConfig(format="%(levelname)s: %(message)s")
 
+url_adsabs = 'http://adsabs.harvard.edu/cgi-bin/bib_query?arXiv:{0}'
 re_arxiv_new = re.compile('^[0-9]+\\.[0-9v]+$')
 re_arxiv_old = re.compile('.*-[a-z]+/[0-9v]+$')
 re_doi = re.compile('^10\\..*/.*$')
@@ -65,9 +68,9 @@ for article_id in args.arxivid:
     if re_arxiv_new.match(article_id) or re_arxiv_old.match(article_id):
         ref = arxiv.get_by_id(article_id)
         """ find paper <> arxiv relation """
-        f = urllib.urlopen( "http://adsabs.harvard.edu/cgi-bin/bib_query?arXiv:" + article_id ).read()
-        tree = etree.HTML( f )
-        print tree.xpath( "//meta[@name='citation_doi']" )[0].get("content")
+        r = requests.get(url_adsabs.format(urllib.quote(ref['eprint'].split('v')[0])))
+        ref_adsabs = adsabs.get_by_content(r.text)
+
     elif re_doi.match(article_id):
         ref = crossref.get_by_id(article_id, 'crossref@acc.colormove.de')
 
