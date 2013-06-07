@@ -43,9 +43,10 @@ def download(ref):
     log.info('Download saved as `%s`', filename)
 
 parse_values = list(sys.argv)
+""" inject config file for argparser if present """
 parse_values.pop(0)
-if (len(sys.argv) > 0 and os.path.exists('.arxivload')):
-    parse_values.append('@.arxivload')
+if (len(sys.argv) > 0 and os.path.exists('.bison')):
+    parse_values.append('@.bison')
 
 parser = argparse.ArgumentParser(fromfile_prefix_chars='@')
 parser.description = 'Downloads arXiv articles as pdf. Use a .arxivload file to define default arguments.'
