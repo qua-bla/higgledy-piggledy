@@ -1,10 +1,11 @@
 import urllib2 as urllib
 import logging as log
+import requests
 from xml.dom import minidom
  
 def content(parent, tags=[]):
     try:
-        return tag(parent, tags).firstChild.data
+        return tag(parent, tags).firstChild.data.encode('utf-8')
     except:
         return None 
 
@@ -18,7 +19,7 @@ def tag(parent, tags = []):
             return None
 
 def get_by_id(doi, crossref_key):
-    res = { 'doi' : doi }
+    res = { 'doi' : doi, 'reference_type' : 'Article' }
  
     f = urllib.urlopen('http://www.crossref.org/openurl/?id=doi:'+doi+'&noredirect=true&pid='+crossref_key+'&format=unixref')
     xml = minidom.parse(f)
@@ -57,6 +58,14 @@ def get_by_id(doi, crossref_key):
     else:
         log.warn('key clash between pages and item_numer')
         res['item_numer'] = item_number
+
+    res['url'] = 'http://dx.doi.org/{res[doi]}'.format(res=res)
+    
+    urlfind = requests.get(res['url'])
+    url = urlfind.url
+    if '.aps.org/abstract/' in url:
+        res['downloadurl'] = url.replace('/abstract/', '/pdf/')
+        res['filename'] = res['doi'].split('/')[-1]
 
     return res
 

@@ -9,26 +9,27 @@ import urllib2 as urllib
 import argparse
 import logging as log
 import requests
+import codecs
 from lxml import etree
 
 import adsabs
 import arxiv
 import crossref
 
-bibtex_keys = [ 'author', 'title', 'version', 'date', 'eprinttype', 'eprintclass', 'eprint', 'localfile', 'url' , 'abstract' ]
-bibtex_format = '\n@Online{{{ref[author]},\n{bibtex_content}}}\n'
+bibtex_format = u'\n@{ref[reference_type]}{{{ref[author]},\n{bibtex_content}}}\n'
+bibtex_blocked_keys = ['reference_type','filename','downloadurl']
 
 def to_bibtex(ref):
-    bibtex_content = ''
+    bibtex_content = u''
     for key in ref:
-        if ref[key] != None:
-            bibtex_content += '  {0} = {{{1}}},\n'.format(key, ref[key].encode('utf-8'))
+        if ref[key] != None and not key in bibtex_blocked_keys:
+            bibtex_content += u'  {0} = {{{1}}},\n'.format(key, ref[key])
     return bibtex_format.format(bibtex_content=bibtex_content, ref=ref)
 
 def write_bibtex(ref, bib_filename):
-    if 'localfile' in ref:
+    if 'filename' in ref:
         ref['localfile'] = os.path.relpath(ref['filename'], os.path.dirname(bib_filename))
-    with open(bib_filename, 'a') as bib_file:
+    with codecs.open(bib_filename, 'a', 'utf-8') as bib_file:
         bib_file.write(to_bibtex(ref))
     log.info('Bibtex entry written to `%s`', bib_filename)
 
@@ -36,7 +37,7 @@ def download(ref):
     download_url= ref['downloadurl']
     filename = ref['filename']
     log.debug('Download URL is `%s`', download_url)
-    data = urllib.urlopen(download_url).read()
+    data = requests.get(download_url).content
     with open(filename, 'w') as f:
         f.write(data)
     log.info('Download saved as `%s`', filename)
@@ -48,9 +49,15 @@ if (len(sys.argv) > 0 and os.path.exists('.arxivload')):
 
 parser = argparse.ArgumentParser(fromfile_prefix_chars='@')
 parser.description = 'Downloads arXiv articles as pdf. Use a .arxivload file to define default arguments.'
-parser.add_argument('arxivid', nargs='+')
-parser.add_argument('-v', '--verbose', action='count', help='gives some output')
-parser.add_argument('-b', '--bibtex', metavar='file.bib', nargs='+', help='adds entry to given bibtex files')
+
+""" arguments """
+parser.add_argument('ids', metavar='arXivid/doi', nargs='+')
+parser.add_argument('-b', '--bibtex', metavar='file.bib', nargs='+', help='Add entrys to given bibtex files.')
+crossref_key = parser.add_argument('--crossref-key',  metavar='yourmail@example.org', help='Required to use crossref as source. Register under <http://www.crossref.org/requestaccount>.')
+parser.add_argument('-v', '--verbose', action='count', help='Gives some additional output. Can be defined multiple times to be more verbose.')
+parser.add_argument('-w', '--warn', action='store_true', help='Warn if arXiv article has also been released in a journal.')
+parser.add_argument('-a', '--auto', action='store_true', help='Automatically download related documents and informations.')
+
 args = parser.parse_args(parse_values)
 
 if args.verbose > 1:
@@ -64,15 +71,31 @@ url_adsabs = 'http://adsabs.harvard.edu/cgi-bin/bib_query?arXiv:{0}'
 re_arxiv_new = re.compile('^[0-9]+\\.[0-9v]+$')
 re_arxiv_old = re.compile('.*-[a-z]+/[0-9v]+$')
 re_doi = re.compile('^10\\..*/.*$')
-for article_id in args.arxivid:
+
+def treat_id(article_id):
     if re_arxiv_new.match(article_id) or re_arxiv_old.match(article_id):
         ref = arxiv.get_by_id(article_id)
         """ find paper <> arxiv relation """
         r = requests.get(url_adsabs.format(urllib.quote(ref['eprint'].split('v')[0])))
         ref_adsabs = adsabs.get_by_content(r.text)
+        if ref_adsabs['doi']:
+            ref['note'] = '----\npublished: {ref[doi]}\n----\n'.format(ref=ref_adsabs)
+            if args.warn:
+                log.warn('arXiv {article_id} has also been released in {ref[journal]}.'.format(article_id=article_id, ref=ref_adsabs))
+            if args.auto:
+                log.info('Auto loading from {ref[journal]}'.format(ref=ref_adsabs))
+                treat_id(ref_adsabs['doi'])
+            
 
     elif re_doi.match(article_id):
-        ref = crossref.get_by_id(article_id, 'crossref@acc.colormove.de')
+        if not args.crossref_key:
+            log.error('Found DOI `{0}` but cannot use without --crossref-key'.format(article_id))
+            return
+        ref = crossref.get_by_id(article_id, args.crossref_key)
+
+    else:
+        log.error('Could not indentify arXiv oder DOI in `{0}`.'.format(article_id))
+        return
 
     """ generate bibtex """
     if args.bibtex:
@@ -82,3 +105,8 @@ for article_id in args.arxivid:
     if 'downloadurl' in ref:
         download(ref)
 
+def main():
+    for article_id in args.ids:
+        treat_id(article_id)
+
+main()

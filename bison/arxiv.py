@@ -11,7 +11,7 @@ def get_by_id(arxiv_id):
     feed = feedparser.parse(data)
     
     for entry in feed.entries:
-        ref = {}
+        ref = { 'reference_type' : 'Online' }
         ref['author'] = ' and '.join(author.name for author in entry.authors)
         ref['title'] = entry.title
         ref['eprint'] = entry.id.split('/abs/')[-1]
