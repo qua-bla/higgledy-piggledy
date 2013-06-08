@@ -1,4 +1,5 @@
 import urllib2 as urllib
+from lxml import etree
 import logging as log
 import requests
 from xml.dom import minidom
@@ -65,7 +66,16 @@ def get_by_id(doi, crossref_key):
     url = urlfind.url
     if '.aps.org/abstract/' in url:
         res['downloadurl'] = url.replace('/abstract/', '/pdf/')
-        res['filename'] = res['doi'].split('/')[-1]
+        res['filename'] = res['doi'].split('/')[-1] + '.pdf'
+    if '10.1016' in doi:
+        try:
+            tree = etree.HTML(urlfind.text)
+            res['downloadurl'] = tree.xpath('//a[@id="pdfLink"]')[0].get('href')
+            res['filename'] = res['doi'].split('/')[-1] + '.pdf'
+        except:
+            pass
+
+    res['citekey'] = res['doi'].split('/')[-1]
 
     return res
 

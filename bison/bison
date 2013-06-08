@@ -16,7 +16,7 @@ import adsabs
 import arxiv
 import crossref
 
-bibtex_format = u'\n@{ref[reference_type]}{{{ref[author]},\n{bibtex_content}}}\n'
+bibtex_format = u'\n@{ref[reference_type]}{{{ref[citekey]},\n{bibtex_content}}}\n'
 bibtex_blocked_keys = ['reference_type','filename','downloadurl']
 
 def to_bibtex(ref):

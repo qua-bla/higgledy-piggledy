@@ -7,7 +7,7 @@ def get_by_id(arxiv_id):
     data = urllib.urlopen(url).read()
     
     #feedparser._FeedParserMixin.namespaces['http://a9.com/-/spec/opensearch/1.1/'] = 'opensearch'
-    #feedparser._FeedParserMixin.namespaces['http://arxiv.org/schemas/atom'] = 'arxiv'
+    feedparser._FeedParserMixin.namespaces['http://arxiv.org/schemas/atom'] = 'arxiv'
     feed = feedparser.parse(data)
     
     for entry in feed.entries:
@@ -18,8 +18,9 @@ def get_by_id(arxiv_id):
         ref['date'] = entry.published[0:10]
         ref['year'] = entry.published[0:4]
         ref['month'] = entry.published[5:7]
-        ref['eprintclass'] = 'cs.DS'
+        ref['eprintclass'] = entry.arxiv_primary_category['term']
         ref['eprinttype'] = 'arxiv'
+        ref['archiveprefix'] = 'arXiv'
         ref['version'] = ref['eprint'].split('v')[-1]
         ref['url'] = entry.id
         ref['abstract'] = entry.summary
@@ -27,6 +28,7 @@ def get_by_id(arxiv_id):
         log.info('Found `%s` by `%s`', entry['title'], entry['author'])
 
         ref['filename'] = ref['eprint'].replace('/', '_') + '.pdf'
+        ref['citekey'] = ref['eprint']
 
         for link in entry.links:
             try:
