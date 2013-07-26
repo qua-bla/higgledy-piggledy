@@ -1,0 +1,51 @@
+\documentclass[11pt,DIV=12]{scrartcl}
+
+\usepackage{gnuplottex}
+\usepackage{xcolor}
+\usepackage{siunitx}
+\usepackage{sansmath}
+
+\begin{document}
+\begin{figure}\centering
+\begin{gnuplot}
+set key center top
+set y2tics
+set y2range [-1000:-3000]
+load 'options.gnuplot'
+load 'colors.gnuplot'
+load 'set-options.gnuplot'
+load 'set-lt-alternating.gnuplot'
+load 'set-lc-default.gnuplot'
+
+load 'test-func.gnuplot'
+\end{gnuplot}
+\caption{With \texttt{set key center top}, two axes}
+\end{figure}
+
+\begin{figure}\centering
+\begin{gnuplot}
+set key below
+load 'options.gnuplot'
+load 'colors.gnuplot'
+load 'set-options.gnuplot'
+load 'set-lc-default.gnuplot'
+
+load 'test-dat.gnuplot'
+\end{gnuplot}
+\caption{Some data with \texttt{set key below}}
+\end{figure}
+
+\begin{figure}\centering
+\begin{gnuplot}
+set key left
+load 'options.gnuplot'
+load 'colors.gnuplot'
+load 'set-options.gnuplot'
+load 'set-lc-default.gnuplot'
+
+load 'test-lp.gnuplot'
+\end{gnuplot}
+\caption{Some data with linespoints}
+\end{figure}
+
+\end{document}
