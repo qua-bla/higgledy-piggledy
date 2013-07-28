@@ -1,3 +1,8 @@
+# color of the grid/tics
+grid_hex="#808080"
+grid_dec="0.5,0.5,0.5"
+
+# colors for lines/points
 color_1="#FF1B00"
 color_2="#F0C700"
 color_3="#36FF00"

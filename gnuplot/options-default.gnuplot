@@ -1,6 +1,6 @@
-# color of the grid/tics
-grid_hex="#808080"
-grid_dec="0.5,0.5,0.5"
+# default color of the grid/tics
+grid_hex="#000000"
+grid_dec="0,0,0"
 
 # dimensions of the full graphic (cm)
 width=10
