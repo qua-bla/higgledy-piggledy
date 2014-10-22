@@ -22,7 +22,7 @@ def get_by_id(arxiv_id):
         ref['eprinttype'] = 'arxiv'
         ref['archiveprefix'] = 'arXiv'
         ref['version'] = ref['eprint'].split('v')[-1]
-        ref['url'] = entry.id
+        #ref['url'] = entry.id
         ref['abstract'] = entry.summary
 
         log.info('Found `%s` by `%s`', entry['title'], entry['author'])

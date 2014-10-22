@@ -22,7 +22,9 @@ def tag(parent, tags = []):
 def get_by_id(doi, crossref_key):
     res = { 'doi' : doi, 'reference_type' : 'Article' }
  
-    f = urllib.urlopen('http://www.crossref.org/openurl/?id=doi:'+doi+'&noredirect=true&pid='+crossref_key+'&format=unixref')
+    url = 'http://www.crossref.org/openurl/?id=doi:'+doi+'&noredirect=true&pid='+crossref_key+'&format=unixref'
+    log.debug('Retriving URL <%s>', url)
+    f = urllib.urlopen(url)
     xml = minidom.parse(f)
  
     journal = tag(xml, ['doi_records','doi_record','crossref','journal'])
@@ -76,6 +78,7 @@ def get_by_id(doi, crossref_key):
             pass
 
     res['citekey'] = res['doi'].split('/')[-1]
+    del res['url']
 
     return res
 
